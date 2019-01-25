@@ -8,10 +8,12 @@ namespace SmprMonitoring
 {
     public class Destination
     {
-        bool _secondListIsBusy = false;
         List<Second> _secondList = new List<Second>();
         uint _maxNumber = 0;
         private int _destinationNumber;
+        byte[] nextElement = new byte[2];
+        byte[] timeBytes = new byte[4];
+        byte[] FOCBytes = new byte[4];
 
         [JsonIgnore]
         public DateTime LastRecievedDateTime;
@@ -64,88 +66,7 @@ namespace SmprMonitoring
 
         public void ProccesDatagram(Datagram datagram, double receiveTimeMS)
         {
-            List<PacketParameters> packets = new List<PacketParameters>();
-            ParsePackets(datagram, ref packets);
-
-            while (_secondListIsBusy) Thread.Sleep(1);
-            _secondListIsBusy = true;
-
-            bool firstElementProccesed = false;
-            foreach (var packet in packets)
-            {
-                if (packet.SendTime <= _maxNumber) continue;
-
-                double transmissionDelay = receiveTimeMS - (packet.SendTime * 1000.0 + packet.FractionOfSecond / FOSSize);
-
-                bool found = false;
-                int insertAt = _secondList.Count;
-                int i;
-                for (i = _secondList.Count - 1; i >= 0; i--)
-                {
-                    if (_secondList[i].Number > packet.SendTime) insertAt = i;
-                    else
-                    if (packet.SendTime == _secondList[i].Number)
-                    {
-                        found = true;
-                        break;
-                    }
-                    else break;
-                }
-
-                bool packetWasRegistred = false;
-                if (found)
-                {
-                    packetWasRegistred = _secondList[i].RegisterReceivedPacket(packet.FractionOfSecond, transmissionDelay);
-                }
-                else
-                {
-                    var second = new Second(packet.SendTime);
-                    packetWasRegistred = second.RegisterReceivedPacket(packet.FractionOfSecond, transmissionDelay);
-                    _secondList.Insert(insertAt, second);
-                }
-
-                if (UseLastRecievedTime && !firstElementProccesed && packetWasRegistred)
-                {
-                    firstElementProccesed = true;
-                    LastRecievedDateTime = DateTime.UtcNow;
-                }
-            }
-            _secondListIsBusy = false;
-        }
-
-        public void SetMaxNumber(uint maxNumber, bool firstPeriodPassed)
-        {
-            _maxNumber = maxNumber;
-
-            while (_secondListIsBusy) Thread.Sleep(1);
-            _secondListIsBusy = true;
-
-            int toDelete = 0;
-            for (int i = 0; i < _secondList.Count; i++)
-            {
-                if (_secondList[i].Number < _maxNumber)
-                {
-                    if (firstPeriodPassed) LostPacketsPerMinute += _secondList[i].LostPackets;
-                    toDelete++;
-                }
-                else break;
-            }
-
-            if (toDelete > 0)
-                _secondList.RemoveRange(0, toDelete);
-            else
-            {
-                if (firstPeriodPassed) LostPacketsPerMinute += 50;
-            }
-
-            _secondListIsBusy = false;
-        }
-
-        void ParsePackets(Datagram datagram, ref List<PacketParameters> packets)
-        {
-            byte[] nextElement = new byte[2];
-            byte[] timeBytes = new byte[4];
-            byte[] FOCBytes = new byte[4];
+            List<Tuple<uint, uint>> packets = new List<Tuple<uint, uint>>();
 
             try
             {
@@ -170,36 +91,109 @@ namespace SmprMonitoring
                     FOCBytes[1] = datagram[byteNumber++];
                     FOCBytes[0] = datagram[byteNumber++];
 
-                    packets.Add(new PacketParameters(BitConverter.ToUInt32(timeBytes, 0), BitConverter.ToUInt32(FOCBytes, 0)));
+                    packets.Add(new Tuple<uint, uint>(BitConverter.ToUInt32(timeBytes, 0), BitConverter.ToUInt32(FOCBytes, 0)));
 
                     byteNumber += BitConverter.ToInt16(nextElement, 0) - 14;
                 }
             }
-            catch (IndexOutOfRangeException) { return; }
+            catch (IndexOutOfRangeException) {  }
+
+            lock (_secondList)
+            {
+
+                bool firstElementProccesed = false;
+                foreach (var packet in packets)
+                {
+                    if (packet.Item1 <= _maxNumber) continue;
+
+                    double transmissionDelay = receiveTimeMS - (packet.Item1 * 1000.0 + packet.Item2 / FOSSize);
+
+                    bool found = false;
+                    int insertAt = _secondList.Count;
+                    int i;
+                    for (i = _secondList.Count - 1; i >= 0; i--)
+                    {
+                        if (_secondList[i].Number > packet.Item1) insertAt = i;
+                        else
+                        if (packet.Item1 == _secondList[i].Number)
+                        {
+                            found = true;
+                            break;
+                        }
+                        else break;
+                    }
+
+                    bool packetWasRegistred = false;
+                    if (found)
+                    {
+                        packetWasRegistred = _secondList[i].RegisterReceivedPacket(packet.Item2, transmissionDelay);
+                    }
+                    else
+                    {
+                        var second = new Second(packet.Item1);
+                        packetWasRegistred = second.RegisterReceivedPacket(packet.Item2, transmissionDelay);
+                        _secondList.Insert(insertAt, second);
+                    }
+
+                    if (UseLastRecievedTime && !firstElementProccesed && packetWasRegistred)
+                    {
+                        firstElementProccesed = true;
+                        LastRecievedDateTime = DateTime.UtcNow;
+                    }
+                }
+            }
+        }
+
+        public void SetMaxNumber(uint maxNumber, bool firstPeriodPassed)
+        {
+            _maxNumber = maxNumber;
+
+            lock (_secondList)
+            {
+                int toDelete = 0;
+                for (int i = 0; i < _secondList.Count; i++)
+                {
+                    if (_secondList[i].Number < _maxNumber)
+                    {
+                        if (firstPeriodPassed) LostPacketsPerMinute += _secondList[i].LostPackets;
+                        toDelete++;
+                    }
+                    else break;
+                }
+
+                if (toDelete > 0)
+                    _secondList.RemoveRange(0, toDelete);
+                else
+                {
+                    if (firstPeriodPassed) LostPacketsPerMinute += 50;
+                }
+            }
         }
 
         public Second GetSecond(uint Number)
         {
-            bool found = false;
-            int i;
-            for (i = 0; i < _secondList.Count; i++)
+            lock (_secondList)
             {
-                if (_secondList[i].Number >= Number)
+                bool found = false;
+                int i;
+                for (i = 0; i < _secondList.Count; i++)
                 {
-                    if (_secondList[i].Number == Number) found = true;
-                    break;
+                    if (_secondList[i].Number >= Number)
+                    {
+                        if (_secondList[i].Number == Number) found = true;
+                        break;
+                    }
                 }
-            }
 
-            Second result = null;
-            if (found)
-            {
-                result = _secondList[i];
-                LastRequestedRecievedTime = Number;
+                Second result = null;
+                if (found)
+                {
+                    result = _secondList[i];
+                    LastRequestedRecievedTime = Number;
+                }
+                return result;
             }
-            return result;
         }
-
         public override string ToString()
         {
             return string.Format("{0} : {1}", Name, Port);

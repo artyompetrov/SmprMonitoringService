@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using PcapDotNet.Core;
 using SmprMonitoring;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace Configurator
     public partial class MainWindow : Window
     {
         Settings _settings;
+        SqlScriptGeneratorWindow s;
 
         bool loadComplete;
 
@@ -76,21 +78,7 @@ namespace Configurator
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            string result = _settings.CheckSettings();
-            if (result == null)
-            {
-                using (StreamWriter file = File.CreateText("settings.json"))
-                {
-                    JsonSerializer serializer = new JsonSerializer();
-                    serializer.Formatting = Formatting.Indented;
-                    serializer.Serialize(file, _settings);
-                }
-            }
-            else
-            {
-                MessageBox.Show("Ошибка при сохранении:\n" + result);
-                e.Cancel = true;
-            }
+
         }
 
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
@@ -119,6 +107,36 @@ namespace Configurator
         {
             if (loadComplete)
             _settings.DeviceName = _deviceID[DevicesCB.SelectedIndex];
+        }
+
+        private void GenerateSQL(object sender, RoutedEventArgs e)
+        {
+            if (s == null)
+            {
+                s = new SqlScriptGeneratorWindow(_settings, _lbDestinations.SelectedIndex);
+                s.Closed += (object sender2, EventArgs e2) => { s = null; };
+                s.Show();
+            }
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            string result = _settings.CheckSettings();
+            if (result == null)
+            {
+                using (StreamWriter file = File.CreateText("settings.json"))
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Formatting = Formatting.Indented;
+                    serializer.Serialize(file, _settings);
+
+                    MessageBox.Show("Конфигурация сохранена", "Сохранено!", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Ошибка при сохранении:\n" + result);
+            }
         }
     }
 

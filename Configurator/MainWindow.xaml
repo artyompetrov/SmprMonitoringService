@@ -7,21 +7,22 @@
         xmlns:local="clr-namespace:Configurator"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="Анализ СМПР Конфигуратор" Height="581.985" Width="463" ResizeMode="NoResize">
+        Title="Анализ СМПР Конфигуратор" Height="606.985" Width="470" ResizeMode="NoResize">
     <Window.Resources>
         <local:RadioBoolToDestinationProtocol x:Key="RadioBoolToDestinationProtocol" />
     </Window.Resources>
+    <Grid Margin="0,0,0,1">
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="418" Margin="4,146,0,0" VerticalAlignment="Top" Width="446"/>
 
-    <Grid Margin="0,0,0,4">
-        <ListBox Name="_lbDestinations" ItemsSource="{Binding Destinations}" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Left" Height="355" Margin="10,185,0,0" VerticalAlignment="Top" Width="181"/>
-        <Button Content="Добавить" HorizontalAlignment="Left" Margin="10,158,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
-        <Button Content="Удалить" HorizontalAlignment="Left" Margin="90,158,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click_1"/>
-        <TextBox Text="{Binding RequestDepth}" HorizontalAlignment="Left" Height="22" Margin="371,57,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="65"/>
-        <Label Content="Глубина анализа, сек.:" HorizontalAlignment="Left" Margin="206,55,0,0" VerticalAlignment="Top"/>
-        <Label Content="Направления анализа:" HorizontalAlignment="Left" Margin="10,132,0,0" VerticalAlignment="Top" Width="138"/>
+        <ListBox ItemsSource="{Binding Destinations}" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Left" Height="355" Margin="13,200,0,0" VerticalAlignment="Top" Width="181" x:Name="_lbDestinations"/>
+        <Button Content="Добавить" HorizontalAlignment="Left" Margin="13,173,0,0" VerticalAlignment="Top" Width="64" Click="Button_Click"/>
+        <Button Content="Удалить" HorizontalAlignment="Left" Margin="82,173,0,0" VerticalAlignment="Top" Width="57" Click="Button_Click_1"/>
+        <TextBox Text="{Binding RequestDepth}" HorizontalAlignment="Left" Height="22" Margin="374,59,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="65"/>
+        <Label Content="Глубина анализа, сек.:" HorizontalAlignment="Left" Margin="209,57,0,0" VerticalAlignment="Top"/>
+        <Label Content="Направления анализа:" HorizontalAlignment="Left" Margin="13,147,0,0" VerticalAlignment="Top" Width="138"/>
 
 
-        <Canvas DataContext="{Binding Destinations}" HorizontalAlignment="Left" Height="378" Margin="206,150,0,0" VerticalAlignment="Top" Width="241">
+        <Canvas DataContext="{Binding Destinations}" HorizontalAlignment="Left" Height="378" Margin="209,165,0,0" VerticalAlignment="Top" Width="241">
             <TextBox HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="{Binding Name}" VerticalAlignment="Top" Width="126" Canvas.Left="105" Canvas.Top="2" LostFocus="TextBox_LostFocus"/>
             <Label Content="Название:" Canvas.Top="-1"/>
             <Label Content="Порт:" Canvas.Top="29"/>
@@ -37,29 +38,37 @@
             <CheckBox IsChecked="{Binding UseAverageTransmissionDelay}" Content="4. Средняя задержка" Canvas.Left="8" Canvas.Top="231"/>
             <CheckBox IsChecked="{Binding UseJitter}" Content="5. Джиттер (Макс-Мин задержка)" Canvas.Left="8" Canvas.Top="252"/>
             <CheckBox IsChecked="{Binding UseMaxTransmissionDelay}" Content="6. Максимальная задержка" Canvas.Left="8" Canvas.Top="273"/>
-            <CheckBox IsChecked="{Binding UseMinTransmissionDelay}" Content="7. Минимальная задерка" Canvas.Left="8" Canvas.Top="294"/>
+            <CheckBox IsChecked="{Binding UseMinTransmissionDelay}" Content="7. Минимальная задерка" Canvas.Left="8" Canvas.Top="293"/>
 
             <Label Content="Передаваемые параметры:" Canvas.Top="138" Canvas.Left="2"/>
             <TextBox HorizontalAlignment="Left" Height="23" TextWrapping="Wrap" Text="{Binding FOSSize}" VerticalAlignment="Top" Width="126" Canvas.Left="105" Canvas.Top="87"/>
             <Label Content="Множитель FOS:" Canvas.Top="85"/>
-            <CheckBox IsChecked="{Binding UseLostPacketsPerPeriod}" Content="8. Потерянные пакеты за минуту" Canvas.Left="8" Canvas.Top="314"/>
-            <CheckBox IsChecked="{Binding UseLastRecievedTime}" Content="9. Последний полученный пакет" Canvas.Left="8" Canvas.Top="335"/>
+            <CheckBox IsChecked="{Binding UseLostPacketsPerPeriod}" Content="8. Потерянные пакеты за период" Canvas.Left="8" Canvas.Top="358"/>
+            <CheckBox IsChecked="{Binding UseLastRecievedTime}" Content="9. Последний полученный пакет" Canvas.Left="8" Canvas.Top="313"/>
             <Label Content="Протокол:" Canvas.Top="116" Canvas.Left="2"/>
-            <RadioButton IsChecked="{Binding Path=Protocol, Converter={StaticResource RadioBoolToDestinationProtocol}, ConverterParameter=0}" Content="UDP" Canvas.Left="106" Canvas.Top="121"/>
-            <RadioButton IsChecked="{Binding Path=Protocol, Converter={StaticResource RadioBoolToDestinationProtocol}, ConverterParameter=1}" Content="TCP" Canvas.Left="150" Canvas.Top="121"/>
-            <CheckBox IsChecked="{Binding UseDuplicatePackets}" Content="10. Количество дубликатов" Canvas.Left="8" Canvas.Top="356"/>
+            <RadioButton IsChecked="{Binding Protocol, ConverterParameter=0, Converter={StaticResource RadioBoolToDestinationProtocol}}" Content="UDP" Canvas.Left="106" Canvas.Top="121"/>
+            <RadioButton IsChecked="{Binding Protocol, ConverterParameter=1, Converter={StaticResource RadioBoolToDestinationProtocol}}" Content="TCP" Canvas.Left="150" Canvas.Top="121"/>
+            <CheckBox IsChecked="{Binding UseDuplicatePackets}" Content="10. Количество дубликатов" Canvas.Left="8" Canvas.Top="333"/>
         </Canvas>
-        <ListBox Name="IpAdressesLB" ItemsSource="{Binding AllowedIPAddresses}" HorizontalAlignment="Left" Height="71" Margin="10,54,0,0" VerticalAlignment="Top" Width="181"/>
-        <TextBox Name="IpAddressTB"  HorizontalAlignment="Left" Height="23" Margin="10,27,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="105"/>
-        <Button Content="+" HorizontalAlignment="Left" Margin="120,26,0,0" VerticalAlignment="Top" Width="34" Height="23" Click="Button_Click_3"/>
-        <Button Content="-" HorizontalAlignment="Left" Margin="159,26,0,0" VerticalAlignment="Top" Width="32" Click="Button_Click_2" Height="23"/>
-        <ComboBox Name="DevicesCB" HorizontalAlignment="Left" Margin="206,26,0,0" VerticalAlignment="Top" Width="230" SelectionChanged="DevicesCB_SelectionChanged"/>
-        <Label Content="Сканируемый сетевой адаптер:" HorizontalAlignment="Left" Margin="206,0,0,0" VerticalAlignment="Top"/>
-        <Label Content="Белый список IP МЭК104:" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top"/>
-        <TextBox Text="{Binding IgnoreChannelLostSeconds}" Height="23" Margin="371,84,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="65"/>
-        <Label Content="Игнор. проп. канала, сек.:" HorizontalAlignment="Left" Margin="206,81,0,0" VerticalAlignment="Top"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="371,112,0,0" TextWrapping="Wrap" Text="{Binding AveragingPeriod}" VerticalAlignment="Top" Width="65"/>
-        <Label Content="Период усреднения, сек.:" HorizontalAlignment="Left" Margin="206,109,0,0" VerticalAlignment="Top"/>
+        <ListBox x:Name="IpAdressesLB" ItemsSource="{Binding AllowedIPAddresses}" HorizontalAlignment="Left" Height="71" Margin="12,63,0,0" VerticalAlignment="Top" Width="181"/>
+        <TextBox x:Name="IpAddressTB"  HorizontalAlignment="Left" Height="23" Margin="12,36,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="105"/>
+        <Button Content="+" HorizontalAlignment="Left" Margin="122,35,0,0" VerticalAlignment="Top" Width="34" Height="23" Click="Button_Click_3"/>
+        <Button Content="-" HorizontalAlignment="Left" Margin="161,35,0,0" VerticalAlignment="Top" Width="32" Click="Button_Click_2" Height="23"/>
+        <ComboBox x:Name="DevicesCB" HorizontalAlignment="Left" Margin="209,28,0,0" VerticalAlignment="Top" Width="206" SelectionChanged="DevicesCB_SelectionChanged"/>
+        <Label Content="Сканируемый сетевой адаптер:" HorizontalAlignment="Left" Margin="209,2,0,0" VerticalAlignment="Top"/>
+        <Label Content="Белый список IP МЭК104:" HorizontalAlignment="Left" Margin="12,9,0,0" VerticalAlignment="Top"/>
+        <TextBox Text="{Binding IgnoreChannelLostSeconds}" Height="23" Margin="374,86,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left" Width="65"/>
+        <Label Content="Игнор. проп. канала, сек.:" HorizontalAlignment="Left" Margin="209,83,0,0" VerticalAlignment="Top"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="374,114,0,0" TextWrapping="Wrap" Text="{Binding AveragingPeriod}" VerticalAlignment="Top" Width="65"/>
+        <Label Content="Период усреднения, сек.:" HorizontalAlignment="Left" Margin="209,111,0,0" VerticalAlignment="Top"/>
+        <Button Content="SQL" HorizontalAlignment="Left" Margin="144,173,0,0" VerticalAlignment="Top" Width="50" Click="GenerateSQL"/>
+        <Button HorizontalAlignment="Left" Margin="424,6,0,0" VerticalAlignment="Top" Width="23" Height="23" Click="SaveButton_Click">
+            <Button.ContentTemplate>
+                <DataTemplate>
+                    <Image Source="save.png" Margin="-1, -2, -1, -1" Height="19"/>
+                </DataTemplate>
+            </Button.ContentTemplate> />
+        </Button>
 
     </Grid>
 </Window>

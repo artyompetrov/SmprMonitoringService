@@ -9,7 +9,8 @@ namespace SmprMonitoring
         public uint RequestDepth { get; set; } = 10;
         public uint IgnoreChannelLostSeconds { get; set; } = 0;
         public uint AveragingPeriod { get; set; } = 60;
-        
+        public uint RTUID { get; set; }
+
         public string CheckSettings()
         {
             bool[] b = new bool[4];

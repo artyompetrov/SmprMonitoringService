@@ -16,7 +16,7 @@ using Timer = System.Timers.Timer;
 
 namespace SmprMonitoringService
 {
-    static class SmprMonitoringWorker
+    internal static class SmprMonitoringWorker
     {
         static DateTime _unixOrigin = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         static Timer _timer1 = new Timer(100);
@@ -31,6 +31,8 @@ namespace SmprMonitoringService
         static List<IPAddress> _allowedIpAddresses = new List<IPAddress>();
         static bool _firstPeriodPassed = false;
         static ASDU _asdu = new ASDU(_alp, TypeID.M_ME_TF_1, CauseOfTransmission.SPONTANEOUS, false, false, 0, 0, false);
+        static Dictionary<int, float> _lastSentData = new Dictionary<int, float>();
+
 
 
         internal static void Start()
@@ -93,12 +95,10 @@ namespace SmprMonitoringService
                 }
             }
 
-
             _server.ServerMode = ServerMode.SINGLE_REDUNDANCY_GROUP;
             _server.SetConnectionRequestHandler(OnConnectionRequest, null);
             _server.SetConnectionEventHandler(OnConnectionEvent, null);
             _server.Start();
-
 
             if (_settings.Destinations.Count > 0)
             {
@@ -122,16 +122,13 @@ namespace SmprMonitoringService
                         return;
                     }
 
-
                     StringBuilder sb = new StringBuilder();
                     sb.Append("ip dst host ");
                     sb.Append(localIpAdress);
                     sb.Append(" and (");
 
-
                     List<int> tcpPorts = new List<int>();
                     List<int> udpPorts = new List<int>();
-
 
                     foreach (var dest in _settings.Destinations)
                     {
@@ -190,7 +187,6 @@ namespace SmprMonitoringService
         internal static void Stop()
         {
             if (!_started) return;
-
 
             _communicator.Break();
             _timer1.Stop();
@@ -256,31 +252,31 @@ namespace SmprMonitoringService
 
                         if (result != null)
                         {
-                            if (dest.UseStatus) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 1, (float)result.Status, _qd, time));
-                            if (dest.UseLostPackets) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 2, result.LostPackets, _qd, time));
-                            if (dest.UseReceivedPackets) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 3, result.ReceivedPackets, _qd, time));
-                            if (dest.UseAverageTransmissionDelay) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 4, (float)result.AverageTransmissionDelay, _qd, time));
-                            if (dest.UseJitter) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 5, (float)result.Jitter, _qd, time));
-                            if (dest.UseMaxTransmissionDelay) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 6, (float)result.MaxTransmissionDelay, _qd, time));
-                            if (dest.UseMinTransmissionDelay) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 7, (float)result.MinTransmissionDelay, _qd, time));
-                            if (dest.UseDuplicatePackets) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 10, result.DuplicatePackets, _qd, time));
+                            if (dest.UseStatus) AddToASDU(dest.IOAPrefixMultiplied + 1, (float)result.Status, time);
+                            if (dest.UseLostPackets) AddToASDU(dest.IOAPrefixMultiplied + 2, result.LostPackets, time);
+                            if (dest.UseReceivedPackets) AddToASDU(dest.IOAPrefixMultiplied + 3, result.ReceivedPackets, time);
+                            if (dest.UseAverageTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 4, (float)result.AverageTransmissionDelay, time);
+                            if (dest.UseJitter) AddToASDU(dest.IOAPrefixMultiplied + 5, (float)result.Jitter, time);
+                            if (dest.UseMaxTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 6, (float)result.MaxTransmissionDelay, time);
+                            if (dest.UseMinTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 7, (float)result.MinTransmissionDelay, time);
+                            if (dest.UseDuplicatePackets) AddToASDU(dest.IOAPrefixMultiplied + 10, result.DuplicatePackets, time);
                         }
                         else
                         {
                             float delay = (requestTime - dest.LastRequestedRecievedTime + _settings.RequestDepth - 1) * 1000f;
-                            if (dest.UseStatus) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 1, (float)SecondStatus.NotRecieved, _qd, time));
-                            if (dest.UseLostPackets) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 2, 50, _qd, time));
-                            if (dest.UseReceivedPackets) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 3, 0, _qd, time));
-                            if (dest.UseAverageTransmissionDelay) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 4, delay, _qd, time));
-                            if (dest.UseJitter) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 5, 0, _qd, time));
-                            if (dest.UseMaxTransmissionDelay) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 6, delay, _qd, time));
-                            if (dest.UseMinTransmissionDelay) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 7, delay, _qd, time));
-                            if (dest.UseDuplicatePackets) AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 10, 0, _qd, time));
+                            if (dest.UseStatus) AddToASDU(dest.IOAPrefixMultiplied + 1, (float)SecondStatus.NotRecieved, time);
+                            if (dest.UseLostPackets) AddToASDU(dest.IOAPrefixMultiplied + 2, 50, time);
+                            if (dest.UseReceivedPackets) AddToASDU(dest.IOAPrefixMultiplied + 3, 0, time);
+                            if (dest.UseAverageTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 4, delay, time);
+                            if (dest.UseJitter) AddToASDU(dest.IOAPrefixMultiplied + 5, 0, time);
+                            if (dest.UseMaxTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 6, delay, time);
+                            if (dest.UseMinTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 7, delay, time);
+                            if (dest.UseDuplicatePackets) AddToASDU(dest.IOAPrefixMultiplied + 10, 0, time);
                         }
 
                         if (_firstPeriodPassed && nextPeriod && dest.UseLostPacketsPerPeriod)
                         {
-                            AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 8, dest.LostPacketsPerMinute, _qd, time));
+                            AddToASDU(dest.IOAPrefixMultiplied + 8, dest.LostPacketsPerMinute, time);
                         }
 
                         if (dest.UseLastRecievedTime)
@@ -288,7 +284,7 @@ namespace SmprMonitoringService
                             float receivedSecondsAgo = (float)(Math.Truncate((DateTime.UtcNow - dest.LastRecievedDateTime).TotalSeconds));
 
                             if (receivedSecondsAgo <= _settings.IgnoreChannelLostSeconds) receivedSecondsAgo = 0f;
-                            AddToASDU(new MeasuredValueShortWithCP56Time2a(dest.IOAPrefixMultiplied + 9, receivedSecondsAgo, _qd, time));
+                            AddToASDU(dest.IOAPrefixMultiplied + 9, receivedSecondsAgo, time);
                         }
                     }
 
@@ -312,8 +308,20 @@ namespace SmprMonitoringService
             _asdu = new ASDU(_alp, TypeID.M_ME_TF_1, CauseOfTransmission.SPONTANEOUS, false, false, 0, 0, false);
         }
 
-        static private void AddToASDU(InformationObject io)
+        static private void AddToASDU(int objectAddress, float value, CP56Time2a time)
         {
+            if (_lastSentData.ContainsKey(objectAddress))
+            {
+                if (_lastSentData[objectAddress] == value) return;
+                else
+                {
+                    _lastSentData[objectAddress] = value;
+                }
+            }
+            else _lastSentData.Add(objectAddress, value);
+
+            var io = new MeasuredValueShortWithCP56Time2a(objectAddress, value, _qd, time);
+
             if (_asdu.AddInformationObject(io)) return;
             else
             {

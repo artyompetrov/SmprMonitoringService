@@ -31,8 +31,9 @@ namespace SmprMonitoringService
             if (e.ExceptionObject.GetType() != typeof(LogException))
             {
                 Log(e.ExceptionObject.ToString() + Environment.NewLine + "closing with error");
-
+#if !DEBUG
                 Environment.Exit(-1);
+#endif
             }
         }
 
