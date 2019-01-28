@@ -98,6 +98,7 @@ namespace SmprMonitoringService
             _server.ServerMode = ServerMode.SINGLE_REDUNDANCY_GROUP;
             _server.SetConnectionRequestHandler(OnConnectionRequest, null);
             _server.SetConnectionEventHandler(OnConnectionEvent, null);
+            _server.SetInterrogationHandler(OnInterrogation, null);
             _server.Start();
 
             if (_settings.Destinations.Count > 0)
@@ -182,6 +183,37 @@ namespace SmprMonitoringService
             {
                 SmprMonitoringService.Log("Destination list is empty");
             }
+        }
+
+        private static bool OnInterrogation(object parameter, IMasterConnection connection, ASDU asdu, byte qoi)
+        {
+            if (qoi != 20 && qoi != 21) return false;
+
+            ApplicationLayerParameters cp = connection.GetApplicationLayerParameters();
+
+            connection.SendACT_CON(asdu, false);
+
+            ASDU newAsdu = new ASDU(cp, TypeID.M_ME_TF_1, CauseOfTransmission.INTERROGATED_BY_STATION, false, false, 0, 0, false);
+
+            CP56Time2a time = new CP56Time2a(DateTime.UtcNow.AddSeconds(-_settings.RequestDepth));
+
+            lock (_lastSentData)
+            {
+                foreach (KeyValuePair<int, float> pair in _lastSentData)
+                {
+                    if (!newAsdu.AddInformationObject(new MeasuredValueShortWithCP56Time2a(pair.Key, pair.Value, _qd, time)))
+                    {
+                        connection.SendASDU(newAsdu);
+                        newAsdu = new ASDU(cp, TypeID.M_ME_TF_1, CauseOfTransmission.INTERROGATED_BY_STATION, false, false, 0, 0, false);
+                    }
+                }
+            }
+
+            if (newAsdu.NumberOfElements>0) connection.SendASDU(newAsdu);
+
+            connection.SendACT_TERM(asdu);
+
+            return true;
         }
 
         internal static void Stop()
@@ -310,15 +342,18 @@ namespace SmprMonitoringService
 
         static private void AddToASDU(int objectAddress, float value, CP56Time2a time)
         {
-            if (_lastSentData.ContainsKey(objectAddress))
+            lock (_lastSentData)
             {
-                if (_lastSentData[objectAddress] == value) return;
-                else
+                if (_lastSentData.ContainsKey(objectAddress))
                 {
-                    _lastSentData[objectAddress] = value;
+                    if (_lastSentData[objectAddress] == value) return;
+                    else
+                    {
+                        _lastSentData[objectAddress] = value;
+                    }
                 }
+                else _lastSentData.Add(objectAddress, value);
             }
-            else _lastSentData.Add(objectAddress, value);
 
             var io = new MeasuredValueShortWithCP56Time2a(objectAddress, value, _qd, time);
 
