@@ -91,12 +91,13 @@ namespace SmprMonitoring
                     FOCBytes[1] = datagram[byteNumber++];
                     FOCBytes[0] = datagram[byteNumber++];
 
-                    packets.Add(new Tuple<uint, uint>(BitConverter.ToUInt32(timeBytes, 0), BitConverter.ToUInt32(FOCBytes, 0)));
-
                     byteNumber += BitConverter.ToInt16(nextElement, 0) - 14;
+
+                    if (byteNumber <= datagram.Length)
+                        packets.Add(new Tuple<uint, uint>(BitConverter.ToUInt32(timeBytes, 0), BitConverter.ToUInt32(FOCBytes, 0)));
                 }
             }
-            catch (IndexOutOfRangeException) {  }
+            catch (IndexOutOfRangeException) { }
 
             lock (_secondList)
             {
