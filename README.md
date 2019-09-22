@@ -10,8 +10,8 @@
 - и др.
 
 Подробное описание проекта приведено в статье, опубликованной в сборнике материалов конференции "Энергетика глазами молодежи – 2019":
-Статья – https://drive.google.com/open?id=1r8-1l9-N6w4Amv_bv7Hm6Nm-KN7sU74P
-Презентация – https://drive.google.com/open?id=1S37tYp0mVc4tI1d8EcURfUQtbKHiwVZ_
+Статья – https://drive.google.com/open?id=1r8-1l9-N6w4Amv_bv7Hm6Nm-KN7sU74P/
+Презентация – https://drive.google.com/open?id=1S37tYp0mVc4tI1d8EcURfUQtbKHiwVZ_/
 
 Решение создано в Microsoft Visual Studio 2017.
 Пояснение по проектам входящим в состав решения:
