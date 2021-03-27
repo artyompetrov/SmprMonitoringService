@@ -32,7 +32,7 @@ namespace SMPRmonitoring
             {
                 if (ReceivedPackets > 50) return SecondStatus.Error;
 
-                if (ReceivedPackets == 0) return SecondStatus.NotRecieved;
+                if (ReceivedPackets == 0) return SecondStatus.NotReceived;
 
                 if (DuplicatePackets > 0) return SecondStatus.ExcessDuplicates;
 

@@ -160,7 +160,7 @@ namespace SmprMonitoringService
                                 throw new Exception("Unknown destination protocol: " + currentDestination.Name);
                         }
                         
-                        sb.Append($"port {currentDestination.Port}");
+                        sb.Append($"port {currentDestination.Port.ToString()}");
                         
                         sb.Append(")");
 
@@ -312,7 +312,7 @@ namespace SmprMonitoringService
                         else
                         {
                             var delay = (requestTime - dest.LastRequestedReceivedTime + _settings.RequestDepth - 1) * 1000f;
-                            if (dest.UseStatus) AddToASDU(dest.IOAPrefixMultiplied + 1, (float)SecondStatus.NotRecieved, time);
+                            if (dest.UseStatus) AddToASDU(dest.IOAPrefixMultiplied + 1, (float)SecondStatus.NotReceived, time);
                             if (dest.UseLostPackets) AddToASDU(dest.IOAPrefixMultiplied + 2, 50, time);
                             if (dest.UseAverageTransmissionDelay) AddToASDU(dest.IOAPrefixMultiplied + 3, delay, time);
                             if (dest.UseJitter) AddToASDU(dest.IOAPrefixMultiplied + 4, 0, time);

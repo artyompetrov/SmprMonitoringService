@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,9 +14,9 @@ using PcapDotNet.Packets.Transport;
 
 namespace TcpReconstructor
 {
-    /* here we are going to try and reconstruct the data portion of a TCP
-   session. We will try and handle duplicates, TCP fragments, and out
-   of order packets in a smart way. */
+    //here we are going to try and reconstruct the data portion of a TCP
+   //session. We will try and handle duplicates, TCP fragments, and out
+   //of order packets in a smart way.
 
     /// <summary>
     /// A class that represent a node in a linked list that holds partial Tcp session
@@ -136,39 +137,39 @@ namespace TcpReconstructor
             tcp_frag tmp_frag;
 
 
-            /* now that we have filed away the srcs, lets get the sequence number stuff
-            figured out */
+            //now that we have filed away the srcs, lets get the sequence number stuff
+            //figured out 
             if (first)
             {
 
-                /* this is the first time we have seen this src's sequence number */
+                // this is the first time we have seen this src's sequence number
                 seq = sequence + data_length;
                 if (synflag)
                 {
                     seq++;
                 }
 
-                /* write out the packet data */
+                // write out the packet data
                 write_packet_data(data, s);
 
                 first = false;
                 return;
             }
 
-            /* if we are here, we have already seen this src, let's
-            try and figure out if this packet is in the right place */
+            //if we are here, we have already seen this src, let's
+            //try and figure out if this packet is in the right place
             if (sequence < seq)
             {
-                /* this sequence number seems dated, but
-                check the end to make sure it has no more
-                info than we have already seen */
+                //this sequence number seems dated, but
+                //check the end to make sure it has no more
+                //info than we have already seen
                 newseq = sequence + data_length;
                 if (newseq > seq)
                 {
                     ulong new_len;
 
-                    /* this one has more than we have seen. let's get the
-                    payload that we have not seen. */
+                    //this one has more than we have seen. let's get the
+                    //payload that we have not seen.
 
                     new_len = seq - sequence;
                     
@@ -182,13 +183,13 @@ namespace TcpReconstructor
                     sequence = seq;
                     data_length = newseq - seq;
 
-                    /* this will now appear to be right on time :) */
+                    // this will now appear to be right on time :)
                 }
             }
 
             if (sequence == seq)
             {
-                /* right on time */
+                // right on time 
                 seq += data_length;
                 if (synflag) seq++;
                 if (data != null)
@@ -196,12 +197,12 @@ namespace TcpReconstructor
                     write_packet_data(data, s);
                 }
 
-                /* done with the packet, see if it caused a fragment to fit */
+                // done with the packet, see if it caused a fragment to fit 
                 while (check_fragments());
             }
             else
             {
-                /* out of order packet */
+                // out of order packet 
                 if (data_length > 0 && sequence > seq)
                 {
                     tmp_frag = new tcp_frag();
@@ -222,10 +223,10 @@ namespace TcpReconstructor
                     frags = tmp_frag;
                 }
             }
-        } /* end reassemble_tcp */
+        } // end reassemble_tcp
 
-        /* here we search through all the frag we have collected to see if
-        one fits */
+        // here we search through all the frag we have collected to see if
+        //one fits 
         bool check_fragments()
         {
             tcp_frag prev = null;
@@ -235,7 +236,7 @@ namespace TcpReconstructor
             {
                 if (current.seq == seq)
                 {
-                    /* this fragment fits the stream */
+                    // this fragment fits the stream 
                     if (current.data != null)
                     {
                         write_packet_data(current.data, 0);
@@ -325,3 +326,4 @@ namespace TcpReconstructor
     }
 
 }
+*/

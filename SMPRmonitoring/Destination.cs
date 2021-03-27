@@ -199,7 +199,7 @@ namespace SMPRmonitoring
         }
         public override string ToString()
         {
-            return $"{Name} : {Port}";
+            return $"{Name} : {Port.ToString()}";
         }
 
         public Destination(string name, ushort port, int IOAPrefix, uint FOCSize = 1)
